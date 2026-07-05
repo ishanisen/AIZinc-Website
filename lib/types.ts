@@ -3,6 +3,7 @@ export type Tool = {
   name: string;
   slug: string;
   category: string;
+  categories: string[];
   description: string;
   pricing: "Free" | "Freemium" | "Paid";
   tags: string[];
@@ -30,3 +31,10 @@ export const CATEGORIES: Category[] = [
   "Marketing",
   "Research",
 ];
+
+export function normalizeCategoryName(name: string): Category | string {
+  const match = CATEGORIES.find(
+    (category) => category.toLowerCase() === name.toLowerCase(),
+  );
+  return match ?? name;
+}

@@ -2,11 +2,12 @@
 
 import { Search, Sparkles, ShieldCheck, RefreshCw } from "lucide-react";
 import CategoryChips from "./category-chips";
-import { CATEGORIES, Category } from "@/lib/types";
+import { Category } from "@/lib/types";
 
 type HeroProps = {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
+  searchInput: string;
+  onSearchInputChange: (value: string) => void;
+  onSearchSubmit: () => void;
   activeCategory: Category | null;
   onCategoryChange: (category: Category | null) => void;
 };
@@ -18,11 +19,17 @@ const trustItems = [
 ];
 
 export default function Hero({
-  searchQuery,
-  onSearchChange,
+  searchInput,
+  onSearchInputChange,
+  onSearchSubmit,
   activeCategory,
   onCategoryChange,
 }: HeroProps) {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onSearchSubmit();
+  }
+
   return (
     <section className="border-b border-border bg-background py-16 sm:py-20 lg:py-24">
       <div className="container-main mx-auto max-w-3xl text-center">
@@ -39,7 +46,11 @@ export default function Hero({
           video, productivity, and more.
         </p>
 
-        <div className="relative mx-auto mt-8 max-w-xl">
+        <form
+          onSubmit={handleSubmit}
+          className="relative mx-auto mt-8 max-w-xl"
+          role="search"
+        >
           <label htmlFor="hero-search" className="sr-only">
             Search AI tools
           </label>
@@ -50,16 +61,24 @@ export default function Hero({
           <input
             id="hero-search"
             type="search"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            value={searchInput}
+            onChange={(event) => onSearchInputChange(event.target.value)}
             placeholder="Search by tool, use case, or category"
-            className="w-full rounded-xl border border-border bg-surface py-3.5 pl-11 pr-4 text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            enterKeyHint="search"
+            autoComplete="off"
+            className="w-full rounded-xl border border-border bg-surface py-3.5 pl-11 pr-14 text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
-        </div>
+          <button
+            type="submit"
+            className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg bg-accent text-background transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            aria-label="Search tools"
+          >
+            <Search className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </form>
 
         <div className="mt-6">
           <CategoryChips
-            categories={CATEGORIES}
             activeCategory={activeCategory}
             onCategoryChange={onCategoryChange}
           />

@@ -28,4 +28,4 @@ If the image is missing, the navbar falls back to a text “AIZinc” logo.
 - Tailwind CSS
 - Lucide React
 
-No Firebase, Firestore, or backend — sample data only in `lib/sample-tools.ts`.
+Tool data is fetched server-side from the WordPress REST API via `lib/tools.ts`.

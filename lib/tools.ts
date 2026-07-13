@@ -87,7 +87,6 @@ async function fetchLogoUrls(
     const uniqueIds = [...new Set(logoIds)];
     const response = await fetch(
       `${MEDIA_API_URL}?include=${uniqueIds.join(",")}&per_page=${uniqueIds.length}`,
-      { next: { revalidate: 3600 } },
     );
 
     if (!response.ok) {
@@ -141,35 +140,31 @@ export function mapWordPressToolToTool(
 }
 
 export async function fetchTools(): Promise<Tool[]> {
-  try {
-    const response = await fetch(TOOLS_API_URL, {
-      next: { revalidate: 3600 },
-    });
+  const response = await fetch(TOOLS_API_URL);
 
-    console.log("[fetchTools] response status:", response.status);
+  console.log("[fetchTools] response status:", response.status);
 
-    if (!response.ok) {
-      console.error(
-        "[fetchTools] failed:",
-        response.status,
-        response.statusText,
-      );
-      return [];
-    }
-
-    const wordpressTools = (await response.json()) as WordPressTool[];
-
-    const logoIds = wordpressTools
-      .map((tool) => tool.acf?.logo_url)
-      .filter((value): value is number => typeof value === "number");
-
-    const logoMap = await fetchLogoUrls(logoIds);
-
-    return wordpressTools.map((tool) => mapWordPressToolToTool(tool, logoMap));
-  } catch (error) {
-    console.error("[fetchTools] unexpected error:", error);
-    return [];
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch tools: ${response.status} ${response.statusText}`,
+    );
   }
+
+  const wordpressTools = (await response.json()) as WordPressTool[];
+
+  const logoIds = wordpressTools
+    .map((tool) => tool.acf?.logo_url)
+    .filter((value): value is number => typeof value === "number");
+
+  let logoMap = new Map<number, string>();
+
+  try {
+    logoMap = await fetchLogoUrls(logoIds);
+  } catch (error) {
+    console.warn("[fetchTools] logo fetch failed, continuing without logos:", error);
+  }
+
+  return wordpressTools.map((tool) => mapWordPressToolToTool(tool, logoMap));
 }
 
 export function getFeaturedTools(tools: Tool[]): Tool[] {

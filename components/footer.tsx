@@ -50,11 +50,10 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-border pt-8 sm:flex-row sm:items-center">
+        <div className="mt-10 border-t border-border pt-8">
           <p className="text-xs text-text-muted">
             &copy; {new Date().getFullYear()} AIZinc. All rights reserved.
           </p>
-          <p className="text-xs text-text-muted">Design preview — sample data only.</p>
         </div>
       </div>
     </footer>

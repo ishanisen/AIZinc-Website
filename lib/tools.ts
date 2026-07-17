@@ -1,10 +1,10 @@
 import { Tool, normalizeCategoryName } from "./types";
 
-const TOOLS_API_URL =
-  "https://mediumaquamarine-porpoise-781369.hostingersite.com/wp-json/wp/v2/tools?per_page=100";
+const WP_API_BASE =
+  process.env.NEXT_PUBLIC_WP_URL ?? "https://aizinc.tech/wp-json";
 
-const MEDIA_API_URL =
-  "https://mediumaquamarine-porpoise-781369.hostingersite.com/wp-json/wp/v2/media";
+const TOOLS_API_URL = `${WP_API_BASE}/wp/v2/tools?per_page=100`;
+const MEDIA_API_URL = `${WP_API_BASE}/wp/v2/media`;
 
 type WordPressToolCategory = {
   name: string;
@@ -12,10 +12,11 @@ type WordPressToolCategory = {
 };
 
 type WordPressToolAcf = {
+  tagline?: string;
+  url?: string;
+  pricing_model?: string;
   description?: string;
-  pricing?: string;
   platform?: string;
-  website_url?: string;
   logo_url?: string | number | false;
   featured?: boolean;
 };
@@ -129,13 +130,14 @@ export function mapWordPressToolToTool(
     slug: tool.slug,
     category: primaryCategory,
     categories,
-    description: tool.acf?.description?.trim() ?? "",
-    pricing: normalizePricing(tool.acf?.pricing),
+    description:
+      tool.acf?.tagline?.trim() ?? tool.acf?.description?.trim() ?? "",
+    pricing: normalizePricing(tool.acf?.pricing_model),
     tags: categories.length > 0 ? categories : [primaryCategory],
     featured: Boolean(tool.acf?.featured),
     platform: tool.acf?.platform?.trim() ?? "Web",
     logoUrl: resolveLogoUrl(tool.acf?.logo_url, logoMap),
-    websiteUrl: tool.acf?.website_url?.trim() || undefined,
+    websiteUrl: tool.acf?.url?.trim() || undefined,
   };
 }
 

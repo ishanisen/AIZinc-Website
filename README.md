@@ -11,6 +11,16 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Environment
+
+Optional — override the WordPress REST API base URL in `.env.local`:
+
+```bash
+NEXT_PUBLIC_WP_URL=https://aizinc.tech/wp-json
+```
+
+If unset, the app defaults to `https://aizinc.tech/wp-json`.
+
 ## Logo
 
 Place your logo at:

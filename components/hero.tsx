@@ -54,10 +54,6 @@ export default function Hero({
           <label htmlFor="hero-search" className="sr-only">
             Search AI tools
           </label>
-          <Search
-            className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted"
-            aria-hidden="true"
-          />
           <input
             id="hero-search"
             type="search"
@@ -66,7 +62,7 @@ export default function Hero({
             placeholder="Search by tool, use case, or category"
             enterKeyHint="search"
             autoComplete="off"
-            className="w-full rounded-xl border border-border bg-surface py-3.5 pl-11 pr-14 text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            className="w-full rounded-xl border border-border bg-surface py-3.5 pl-4 pr-14 text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
           <button
             type="submit"

@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "mediumaquamarine-porpoise-781369.hostingersite.com",
+        hostname: "aizinc.tech",
         pathname: "/wp-content/uploads/**",
       },
     ],

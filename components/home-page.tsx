@@ -13,6 +13,7 @@ import {
   hasActiveFilters,
 } from "@/lib/filter-tools";
 import { fetchTools, getFeaturedTools } from "@/lib/tools";
+import { getSupabaseEnvError } from "@/lib/supabase";
 import { Category, Tool } from "@/lib/types";
 import { Loader2, RefreshCw } from "lucide-react";
 
@@ -70,6 +71,14 @@ export default function HomePage() {
   const loadTools = useCallback(async () => {
     setLoading(true);
     setError(null);
+
+    const configError = getSupabaseEnvError();
+    if (configError) {
+      setError(configError);
+      setTools([]);
+      setLoading(false);
+      return;
+    }
 
     try {
       const data = await fetchTools();

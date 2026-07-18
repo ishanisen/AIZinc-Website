@@ -1,47 +1,17 @@
-import { Tool, normalizeCategoryName } from "./types";
+import { createSupabaseClient, getSupabaseEnvError } from "./supabase";
+import { Tool } from "./types";
 
-const WP_API_BASE =
-  process.env.NEXT_PUBLIC_WP_URL ?? "https://aizinc.tech/wp-json";
-
-const TOOLS_API_URL = `${WP_API_BASE}/wp/v2/tools?per_page=100`;
-const MEDIA_API_URL = `${WP_API_BASE}/wp/v2/media`;
-
-type WordPressToolCategory = {
+type SupabaseToolRow = {
+  id: string | number;
   name: string;
   slug: string;
+  tagline: string | null;
+  website_url: string | null;
+  logo_url: string | null;
+  pricing_model: string | null;
 };
 
-type WordPressToolAcf = {
-  tagline?: string;
-  url?: string;
-  pricing_model?: string;
-  description?: string;
-  platform?: string;
-  logo_url?: string | number | false;
-  featured?: boolean;
-};
-
-type WordPressTool = {
-  id: number;
-  slug: string;
-  title: { rendered: string };
-  acf?: WordPressToolAcf;
-  class_list?: string[];
-  _embedded?: {
-    "wp:term"?: WordPressToolCategory[][];
-  };
-};
-
-type WordPressMedia = {
-  id: number;
-  source_url: string;
-};
-
-function stripHtml(value: string): string {
-  return value.replace(/<[^>]*>/g, "").trim();
-}
-
-function normalizePricing(value: string | undefined): Tool["pricing"] {
+function normalizePricing(value: string | undefined | null): Tool["pricing"] {
   if (!value) return "Freemium";
 
   const label = value.includes(": ")
@@ -56,117 +26,42 @@ function normalizePricing(value: string | undefined): Tool["pricing"] {
   return "Freemium";
 }
 
-function slugToCategoryName(slug: string): string {
-  const label = slug.charAt(0).toUpperCase() + slug.slice(1);
-  return String(normalizeCategoryName(label));
-}
-
-function getCategoryNames(tool: WordPressTool): string[] {
-  const names = new Set<string>();
-
-  for (const term of tool._embedded?.["wp:term"]?.flat() ?? []) {
-    if (term?.name) {
-      names.add(String(normalizeCategoryName(term.name)));
-    }
-  }
-
-  for (const item of tool.class_list ?? []) {
-    if (!item.startsWith("tool-category-")) continue;
-    const slug = item.replace("tool-category-", "");
-    names.add(slugToCategoryName(slug));
-  }
-
-  return Array.from(names);
-}
-
-async function fetchLogoUrls(
-  logoIds: number[],
-): Promise<Map<number, string>> {
-  if (logoIds.length === 0) return new Map();
-
-  try {
-    const uniqueIds = [...new Set(logoIds)];
-    const response = await fetch(
-      `${MEDIA_API_URL}?include=${uniqueIds.join(",")}&per_page=${uniqueIds.length}`,
-    );
-
-    if (!response.ok) {
-      console.warn(
-        "[fetchLogoUrls] failed:",
-        response.status,
-        response.statusText,
-      );
-      return new Map();
-    }
-
-    const media = (await response.json()) as WordPressMedia[];
-    return new Map(media.map((item) => [item.id, item.source_url]));
-  } catch (error) {
-    console.warn("[fetchLogoUrls] error:", error);
-    return new Map();
-  }
-}
-
-function resolveLogoUrl(
-  logoUrl: WordPressToolAcf["logo_url"],
-  logoMap: Map<number, string>,
-): string | undefined {
-  if (!logoUrl) return undefined;
-  if (typeof logoUrl === "string") return logoUrl;
-  if (typeof logoUrl === "number") return logoMap.get(logoUrl);
-  return undefined;
-}
-
-export function mapWordPressToolToTool(
-  tool: WordPressTool,
-  logoMap: Map<number, string>,
-): Tool {
-  const categories = getCategoryNames(tool);
-  const primaryCategory = categories[0] ?? "Uncategorized";
-
+function mapSupabaseToolToTool(row: SupabaseToolRow): Tool {
   return {
-    id: String(tool.id),
-    name: stripHtml(tool.title.rendered),
-    slug: tool.slug,
-    category: primaryCategory,
-    categories,
-    description:
-      tool.acf?.tagline?.trim() ?? tool.acf?.description?.trim() ?? "",
-    pricing: normalizePricing(tool.acf?.pricing_model),
-    tags: categories.length > 0 ? categories : [primaryCategory],
-    featured: Boolean(tool.acf?.featured),
-    platform: tool.acf?.platform?.trim() ?? "Web",
-    logoUrl: resolveLogoUrl(tool.acf?.logo_url, logoMap),
-    websiteUrl: tool.acf?.url?.trim() || undefined,
+    id: String(row.id),
+    name: row.name,
+    slug: row.slug,
+    category: "Uncategorized",
+    categories: [],
+    description: row.tagline?.trim() ?? "",
+    pricing: normalizePricing(row.pricing_model),
+    tags: [],
+    featured: false,
+    platform: "Web",
+    logoUrl: row.logo_url?.trim() || undefined,
+    websiteUrl: row.website_url?.trim() || undefined,
   };
 }
 
 export async function fetchTools(): Promise<Tool[]> {
-  const response = await fetch(TOOLS_API_URL);
-
-  console.log("[fetchTools] response status:", response.status);
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch tools: ${response.status} ${response.statusText}`,
-    );
+  const configError = getSupabaseEnvError();
+  if (configError) {
+    throw new Error(configError);
   }
 
-  const wordpressTools = (await response.json()) as WordPressTool[];
+  const supabase = createSupabaseClient();
 
-  const logoIds = wordpressTools
-    .map((tool) => tool.acf?.logo_url)
-    .filter((value): value is number => typeof value === "number");
+  const { data, error } = await supabase
+    .from("tools")
+    .select("id, name, slug, tagline, website_url, logo_url, pricing_model")
+    .eq("published", true)
+    .order("name");
 
-  let logoMap = new Map<number, string>();
-
-  try {
-    logoMap = await fetchLogoUrls(logoIds);
-  } catch (error) {
-    console.warn("[fetchTools] logo fetch failed, continuing without logos:", error);
+  if (error) {
+    throw new Error(error.message);
   }
 
-  return wordpressTools.map((tool) => mapWordPressToolToTool(tool, logoMap));
+  return (data ?? []).map(mapSupabaseToolToTool);
 }
 
 export function getFeaturedTools(tools: Tool[]): Tool[] {

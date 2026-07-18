@@ -1,25 +1,34 @@
 # AIZinc Website
 
-A curated AI tools directory built with Next.js, TypeScript, and Tailwind CSS. Tool data comes from WordPress via the REST API.
+A curated AI tools directory built with Next.js, TypeScript, and Tailwind CSS. Homepage tool data comes from Supabase.
 
 ## Setup
 
 ```bash
 npm install
+cp .env.example .env.local   # if .env.local does not exist yet
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Environment
+## Supabase (required)
 
-Optional — override the WordPress REST API base URL in `.env.local`:
+Homepage tools are loaded from the `public.tools` table via Supabase.
+
+**`.env.local`** is gitignored. Replace the placeholders with your real values from Supabase → **Project Settings → API**:
 
 ```bash
-NEXT_PUBLIC_WP_URL=https://aizinc.tech/wp-json
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key_here
 ```
 
-If unset, the app defaults to `https://aizinc.tech/wp-json`.
+| Variable | What to use |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Base project URL, e.g. `https://abcdefgh.supabase.co` — **not** the `/rest/v1` URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | The **publishable (anon) key** — never use the service role / secret key in the frontend |
+
+Until you replace the placeholders, the homepage shows a friendly error with **Try again**.
 
 ## Logo
 
@@ -37,11 +46,9 @@ If the image is missing, the navbar falls back to a text “AIZinc” logo.
 - TypeScript
 - Tailwind CSS
 - Lucide React
-- WordPress REST API (client-side fetch)
+- Supabase (homepage tool data)
 
 ## Deploy to Hostinger (static)
-
-This app is built as a **static export** for Hostinger shared hosting (`public_html`).
 
 ```bash
 npm run build
@@ -49,11 +56,6 @@ npm run build
 
 Upload the **contents** of the generated `out/` folder to Hostinger `public_html`.
 
-**Notes:**
-- WordPress tool data loads **client-side** in the browser after the page loads.
-- Normal tool/content updates in WordPress do **not** require rebuilding the frontend.
-- Rebuild and re-upload only when you change the Next.js app code, styles, or layout.
+Set the same `NEXT_PUBLIC_*` env vars at build time (or bake them into `.env.local` before running `npm run build`) so they are included in the static bundle.
 
-## CORS
-
-The WordPress site must allow browser requests from your AIZinc domain. If tools fail to load in production, check WordPress/CORS settings for the REST API.
+Tool content updates in Supabase appear on refresh — no frontend rebuild needed for data changes.

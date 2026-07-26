@@ -1,5 +1,11 @@
 import { createSupabaseClient, getSupabaseEnvError } from "./supabase";
-import { Tool } from "./types";
+import { PRICING_OPTIONS, PricingOption, Tool } from "./types";
+
+type SupabaseCategoryRow = {
+  id: string | number;
+  name: string;
+  display_label: string | null;
+};
 
 type SupabaseToolRow = {
   id: string | number;
@@ -9,35 +15,67 @@ type SupabaseToolRow = {
   website_url: string | null;
   logo_url: string | null;
   pricing_model: string | null;
+  primary_category_id: string | number | null;
+  categories: SupabaseCategoryRow | SupabaseCategoryRow[] | null;
 };
 
-function normalizePricing(value: string | undefined | null): Tool["pricing"] {
-  if (!value) return "Freemium";
+const DEFAULT_CATEGORY = "General";
 
-  const label = value.includes(": ")
-    ? value.split(": ").pop()!.trim()
-    : value.trim();
+function normalizeDisplayText(value: string | null | undefined): string {
+  if (!value) return "";
 
-  const lower = label.toLowerCase();
-  if (lower === "free") return "Free";
-  if (lower === "paid") return "Paid";
-  if (lower === "freemium") return "Freemium";
+  return value
+    .replace(/\uFFFD/g, "\u2014")
+    .replace(/\u0097/g, "\u2014")
+    .replace(/â€"/g, "\u2014")
+    .replace(/â€™/g, "\u2019")
+    .trim();
+}
+
+function extractCategoryRow(
+  categories: SupabaseCategoryRow | SupabaseCategoryRow[] | null | undefined,
+): SupabaseCategoryRow | null {
+  if (!categories) return null;
+  return Array.isArray(categories) ? (categories[0] ?? null) : categories;
+}
+
+function extractCategoryDisplayLabel(
+  categories: SupabaseCategoryRow | SupabaseCategoryRow[] | null | undefined,
+): string {
+  const category = extractCategoryRow(categories);
+  if (!category) return DEFAULT_CATEGORY;
+
+  return category.display_label?.trim() || category.name?.trim() || DEFAULT_CATEGORY;
+}
+
+function normalizePricing(value: string | null | undefined): PricingOption {
+  const trimmed = value?.trim();
+  if (!trimmed) return "Freemium";
+
+  if (PRICING_OPTIONS.includes(trimmed as PricingOption)) {
+    return trimmed as PricingOption;
+  }
 
   return "Freemium";
 }
 
 function mapSupabaseToolToTool(row: SupabaseToolRow): Tool {
+  const categoryRow = extractCategoryRow(row.categories);
+
   return {
     id: String(row.id),
     name: row.name,
     slug: row.slug,
-    category: "Uncategorized",
-    categories: [],
-    description: row.tagline?.trim() ?? "",
+    primaryCategoryId: row.primary_category_id
+      ? String(row.primary_category_id)
+      : categoryRow
+        ? String(categoryRow.id)
+        : null,
+    category: extractCategoryDisplayLabel(row.categories),
+    description: normalizeDisplayText(row.tagline),
     pricing: normalizePricing(row.pricing_model),
     tags: [],
     featured: false,
-    platform: "Web",
     logoUrl: row.logo_url?.trim() || undefined,
     websiteUrl: row.website_url?.trim() || undefined,
   };
@@ -53,7 +91,23 @@ export async function fetchTools(): Promise<Tool[]> {
 
   const { data, error } = await supabase
     .from("tools")
-    .select("id, name, slug, tagline, website_url, logo_url, pricing_model")
+    .select(
+      `
+      id,
+      name,
+      slug,
+      tagline,
+      website_url,
+      logo_url,
+      pricing_model,
+      primary_category_id,
+      categories (
+        id,
+        name,
+        display_label
+      )
+    `,
+    )
     .eq("published", true)
     .order("name");
 

@@ -5,14 +5,17 @@
 @layer base {
   html {
     @apply scroll-smooth antialiased;
+    background-color: #faf7f2;
   }
 
   body {
-    @apply bg-background text-text-primary font-sans;
+    @apply min-h-screen bg-background font-sans text-text-primary;
+    background-color: #faf7f2;
+    color: #2c2419;
   }
 
   ::selection {
-    @apply bg-accent/30 text-text-primary;
+    @apply bg-accent-soft text-text-primary;
   }
 }
 

@@ -1,22 +1,34 @@
 import ToolCard from "./tool-card";
 import FilterSidebar, { MobileFiltersButton } from "./filter-sidebar";
-import { Tool } from "@/lib/types";
+import { CategoryRecord, PricingOption, Tool } from "@/lib/types";
 import { ChevronDown } from "lucide-react";
 
 type ToolGridProps = {
   tools: Tool[];
+  categories: CategoryRecord[];
+  activeCategoryId: string | null;
+  onCategoryChange: (categoryId: string | null) => void;
+  activePricing: PricingOption | null;
+  onPricingChange: (pricing: PricingOption | null) => void;
 };
 
-export default function ToolGrid({ tools }: ToolGridProps) {
+export default function ToolGrid({
+  tools,
+  categories,
+  activeCategoryId,
+  onCategoryChange,
+  activePricing,
+  onPricingChange,
+}: ToolGridProps) {
   return (
-    <section id="browse" className="py-12 sm:py-16">
+    <section id="browse" className="bg-background py-12 sm:py-16">
       <div className="container-main">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-xl font-semibold tracking-tight text-text-primary sm:text-2xl">
             Browse tools
           </h2>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-text-muted">
+            <span className="text-sm font-medium text-text-muted">
               {tools.length} {tools.length === 1 ? "result" : "results"}
             </span>
             <div className="relative hidden sm:block">
@@ -26,7 +38,7 @@ export default function ToolGrid({ tools }: ToolGridProps) {
               <select
                 id="sort-select"
                 aria-label="Sort tools"
-                className="appearance-none rounded-lg border border-border bg-surface py-2 pl-3 pr-9 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="appearance-none rounded-lg border border-border bg-white py-2 pl-3 pr-9 text-sm text-text-primary transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
                 defaultValue="Most relevant"
               >
                 <option value="Most relevant">Most relevant</option>
@@ -42,8 +54,14 @@ export default function ToolGrid({ tools }: ToolGridProps) {
           </div>
         </div>
 
-        <div className="mt-8 flex gap-10">
-          <FilterSidebar />
+        <div className="mt-8 flex gap-8">
+          <FilterSidebar
+            categories={categories}
+            activeCategoryId={activeCategoryId}
+            onCategoryChange={onCategoryChange}
+            activePricing={activePricing}
+            onPricingChange={onPricingChange}
+          />
 
           <div className="min-w-0 flex-1">
             <div className="mb-4">
@@ -51,14 +69,14 @@ export default function ToolGrid({ tools }: ToolGridProps) {
             </div>
 
             {tools.length === 0 ? (
-              <div className="rounded-xl border border-border bg-surface px-6 py-16 text-center">
+              <div className="rounded-2xl border border-border bg-white px-6 py-16 text-center shadow-card">
                 <p className="text-sm text-text-secondary">
                   No tools match your search. Try a different keyword or
                   category.
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 {tools.map((tool) => (
                   <ToolCard key={tool.id} tool={tool} />
                 ))}

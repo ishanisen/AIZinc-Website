@@ -1,57 +1,80 @@
-import { Category, Tool } from "./types";
+import { CategoryRecord, PricingOption, Tool } from "./types";
 
 export function hasActiveFilters(
   submittedQuery: string,
-  activeCategory: Category | null,
+  activeCategoryId: string | null,
+  activePricing: PricingOption | null,
 ): boolean {
-  return Boolean(submittedQuery.trim() || activeCategory);
+  return Boolean(submittedQuery.trim() || activeCategoryId || activePricing);
 }
 
 export function filterTools(
   tools: Tool[],
   submittedQuery: string,
-  activeCategory: Category | null,
+  activeCategoryId: string | null,
+  activePricing: PricingOption | null,
 ): Tool[] {
   const query = submittedQuery.trim().toLowerCase();
 
   return tools.filter((tool) => {
     const matchesCategory =
-      !activeCategory ||
-      tool.categories.includes(activeCategory) ||
-      tool.category === activeCategory;
+      !activeCategoryId || tool.primaryCategoryId === activeCategoryId;
 
-    if (!query) return matchesCategory;
+    const matchesPricing = !activePricing || tool.pricing === activePricing;
+
+    if (!matchesCategory || !matchesPricing) return false;
+
+    if (!query) return true;
 
     const searchable = [
       tool.name,
       tool.description,
       tool.category,
-      ...tool.categories,
       ...tool.tags,
     ]
       .join(" ")
       .toLowerCase();
 
-    return matchesCategory && searchable.includes(query);
+    return searchable.includes(query);
   });
 }
 
 export function getResultsHeading(
   submittedQuery: string,
-  activeCategory: Category | null,
+  activeCategoryId: string | null,
+  activePricing: PricingOption | null,
+  categories: CategoryRecord[],
 ): string {
   const query = submittedQuery.trim();
+  const category = categories.find((item) => item.id === activeCategoryId);
+  const categoryLabel = category?.displayLabel ?? "";
 
-  if (query && activeCategory) {
-    return `Search results for "${query}" in ${activeCategory}`;
+  if (query && categoryLabel && activePricing) {
+    return `Search results for "${query}" in ${categoryLabel} (${activePricing})`;
+  }
+
+  if (query && categoryLabel) {
+    return `Search results for "${query}" in ${categoryLabel}`;
+  }
+
+  if (query && activePricing) {
+    return `Search results for "${query}" (${activePricing})`;
   }
 
   if (query) {
     return `Search results for "${query}"`;
   }
 
-  if (activeCategory) {
-    return `${activeCategory} tools`;
+  if (categoryLabel && activePricing) {
+    return `${categoryLabel} tools (${activePricing})`;
+  }
+
+  if (categoryLabel) {
+    return `${categoryLabel} tools`;
+  }
+
+  if (activePricing) {
+    return `${activePricing} tools`;
   }
 
   return "Results";

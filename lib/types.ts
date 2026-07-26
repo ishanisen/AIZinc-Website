@@ -1,40 +1,28 @@
+export type PricingOption = "Free" | "Freemium" | "Free Trial" | "Paid";
+
+export const PRICING_OPTIONS: PricingOption[] = [
+  "Free",
+  "Freemium",
+  "Free Trial",
+  "Paid",
+];
+
+export type CategoryRecord = {
+  id: string;
+  name: string;
+  displayLabel: string;
+};
+
 export type Tool = {
   id: string;
   name: string;
   slug: string;
+  primaryCategoryId: string | null;
   category: string;
-  categories: string[];
   description: string;
-  pricing: "Free" | "Freemium" | "Paid";
+  pricing: PricingOption;
   tags: string[];
   featured: boolean;
-  platform: string;
   logoUrl?: string;
   websiteUrl?: string;
 };
-
-export type Category =
-  | "Writing"
-  | "Coding"
-  | "Design"
-  | "Video"
-  | "Productivity"
-  | "Marketing"
-  | "Research";
-
-export const CATEGORIES: Category[] = [
-  "Writing",
-  "Coding",
-  "Design",
-  "Video",
-  "Productivity",
-  "Marketing",
-  "Research",
-];
-
-export function normalizeCategoryName(name: string): Category | string {
-  const match = CATEGORIES.find(
-    (category) => category.toLowerCase() === name.toLowerCase(),
-  );
-  return match ?? name;
-}

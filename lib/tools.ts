@@ -1,175 +1,121 @@
-import { Tool, normalizeCategoryName } from "./types";
+import { createSupabaseClient, getSupabaseEnvError } from "./supabase";
+import { PRICING_OPTIONS, PricingOption, Tool } from "./types";
 
-const TOOLS_API_URL =
-  "https://mediumaquamarine-porpoise-781369.hostingersite.com/wp-json/wp/v2/tools?per_page=100";
+type SupabaseCategoryRow = {
+  id: string | number;
+  name: string;
+  display_label: string | null;
+};
 
-const MEDIA_API_URL =
-  "https://mediumaquamarine-porpoise-781369.hostingersite.com/wp-json/wp/v2/media";
-
-type WordPressToolCategory = {
+type SupabaseToolRow = {
+  id: string | number;
   name: string;
   slug: string;
+  tagline: string | null;
+  website_url: string | null;
+  logo_url: string | null;
+  pricing_model: string | null;
+  primary_category_id: string | number | null;
+  categories: SupabaseCategoryRow | SupabaseCategoryRow[] | null;
 };
 
-type WordPressToolAcf = {
-  description?: string;
-  pricing?: string;
-  platform?: string;
-  website_url?: string;
-  logo_url?: string | number | false;
-  featured?: boolean;
-};
+const DEFAULT_CATEGORY = "General";
 
-type WordPressTool = {
-  id: number;
-  slug: string;
-  title: { rendered: string };
-  acf?: WordPressToolAcf;
-  class_list?: string[];
-  _embedded?: {
-    "wp:term"?: WordPressToolCategory[][];
-  };
-};
+function normalizeDisplayText(value: string | null | undefined): string {
+  if (!value) return "";
 
-type WordPressMedia = {
-  id: number;
-  source_url: string;
-};
-
-function stripHtml(value: string): string {
-  return value.replace(/<[^>]*>/g, "").trim();
+  return value
+    .replace(/\uFFFD/g, "\u2014")
+    .replace(/\u0097/g, "\u2014")
+    .replace(/â€"/g, "\u2014")
+    .replace(/â€™/g, "\u2019")
+    .trim();
 }
 
-function normalizePricing(value: string | undefined): Tool["pricing"] {
-  if (!value) return "Freemium";
+function extractCategoryRow(
+  categories: SupabaseCategoryRow | SupabaseCategoryRow[] | null | undefined,
+): SupabaseCategoryRow | null {
+  if (!categories) return null;
+  return Array.isArray(categories) ? (categories[0] ?? null) : categories;
+}
 
-  const label = value.includes(": ")
-    ? value.split(": ").pop()!.trim()
-    : value.trim();
+function extractCategoryDisplayLabel(
+  categories: SupabaseCategoryRow | SupabaseCategoryRow[] | null | undefined,
+): string {
+  const category = extractCategoryRow(categories);
+  if (!category) return DEFAULT_CATEGORY;
 
-  const lower = label.toLowerCase();
-  if (lower === "free") return "Free";
-  if (lower === "paid") return "Paid";
-  if (lower === "freemium") return "Freemium";
+  return category.display_label?.trim() || category.name?.trim() || DEFAULT_CATEGORY;
+}
+
+function normalizePricing(value: string | null | undefined): PricingOption {
+  const trimmed = value?.trim();
+  if (!trimmed) return "Freemium";
+
+  if (PRICING_OPTIONS.includes(trimmed as PricingOption)) {
+    return trimmed as PricingOption;
+  }
 
   return "Freemium";
 }
 
-function slugToCategoryName(slug: string): string {
-  const label = slug.charAt(0).toUpperCase() + slug.slice(1);
-  return String(normalizeCategoryName(label));
-}
-
-function getCategoryNames(tool: WordPressTool): string[] {
-  const names = new Set<string>();
-
-  for (const term of tool._embedded?.["wp:term"]?.flat() ?? []) {
-    if (term?.name) {
-      names.add(String(normalizeCategoryName(term.name)));
-    }
-  }
-
-  for (const item of tool.class_list ?? []) {
-    if (!item.startsWith("tool-category-")) continue;
-    const slug = item.replace("tool-category-", "");
-    names.add(slugToCategoryName(slug));
-  }
-
-  return Array.from(names);
-}
-
-async function fetchLogoUrls(
-  logoIds: number[],
-): Promise<Map<number, string>> {
-  if (logoIds.length === 0) return new Map();
-
-  try {
-    const uniqueIds = [...new Set(logoIds)];
-    const response = await fetch(
-      `${MEDIA_API_URL}?include=${uniqueIds.join(",")}&per_page=${uniqueIds.length}`,
-      { next: { revalidate: 3600 } },
-    );
-
-    if (!response.ok) {
-      console.warn(
-        "[fetchLogoUrls] failed:",
-        response.status,
-        response.statusText,
-      );
-      return new Map();
-    }
-
-    const media = (await response.json()) as WordPressMedia[];
-    return new Map(media.map((item) => [item.id, item.source_url]));
-  } catch (error) {
-    console.warn("[fetchLogoUrls] error:", error);
-    return new Map();
-  }
-}
-
-function resolveLogoUrl(
-  logoUrl: WordPressToolAcf["logo_url"],
-  logoMap: Map<number, string>,
-): string | undefined {
-  if (!logoUrl) return undefined;
-  if (typeof logoUrl === "string") return logoUrl;
-  if (typeof logoUrl === "number") return logoMap.get(logoUrl);
-  return undefined;
-}
-
-export function mapWordPressToolToTool(
-  tool: WordPressTool,
-  logoMap: Map<number, string>,
-): Tool {
-  const categories = getCategoryNames(tool);
-  const primaryCategory = categories[0] ?? "Uncategorized";
+function mapSupabaseToolToTool(row: SupabaseToolRow): Tool {
+  const categoryRow = extractCategoryRow(row.categories);
 
   return {
-    id: String(tool.id),
-    name: stripHtml(tool.title.rendered),
-    slug: tool.slug,
-    category: primaryCategory,
-    categories,
-    description: tool.acf?.description?.trim() ?? "",
-    pricing: normalizePricing(tool.acf?.pricing),
-    tags: categories.length > 0 ? categories : [primaryCategory],
-    featured: Boolean(tool.acf?.featured),
-    platform: tool.acf?.platform?.trim() ?? "Web",
-    logoUrl: resolveLogoUrl(tool.acf?.logo_url, logoMap),
-    websiteUrl: tool.acf?.website_url?.trim() || undefined,
+    id: String(row.id),
+    name: row.name,
+    slug: row.slug,
+    primaryCategoryId: row.primary_category_id
+      ? String(row.primary_category_id)
+      : categoryRow
+        ? String(categoryRow.id)
+        : null,
+    category: extractCategoryDisplayLabel(row.categories),
+    description: normalizeDisplayText(row.tagline),
+    pricing: normalizePricing(row.pricing_model),
+    tags: [],
+    featured: false,
+    logoUrl: row.logo_url?.trim() || undefined,
+    websiteUrl: row.website_url?.trim() || undefined,
   };
 }
 
 export async function fetchTools(): Promise<Tool[]> {
-  try {
-    const response = await fetch(TOOLS_API_URL, {
-      next: { revalidate: 3600 },
-    });
-
-    console.log("[fetchTools] response status:", response.status);
-
-    if (!response.ok) {
-      console.error(
-        "[fetchTools] failed:",
-        response.status,
-        response.statusText,
-      );
-      return [];
-    }
-
-    const wordpressTools = (await response.json()) as WordPressTool[];
-
-    const logoIds = wordpressTools
-      .map((tool) => tool.acf?.logo_url)
-      .filter((value): value is number => typeof value === "number");
-
-    const logoMap = await fetchLogoUrls(logoIds);
-
-    return wordpressTools.map((tool) => mapWordPressToolToTool(tool, logoMap));
-  } catch (error) {
-    console.error("[fetchTools] unexpected error:", error);
-    return [];
+  const configError = getSupabaseEnvError();
+  if (configError) {
+    throw new Error(configError);
   }
+
+  const supabase = createSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("tools")
+    .select(
+      `
+      id,
+      name,
+      slug,
+      tagline,
+      website_url,
+      logo_url,
+      pricing_model,
+      primary_category_id,
+      categories (
+        id,
+        name,
+        display_label
+      )
+    `,
+    )
+    .eq("published", true)
+    .order("name");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map(mapSupabaseToolToTool);
 }
 
 export function getFeaturedTools(tools: Tool[]): Tool[] {

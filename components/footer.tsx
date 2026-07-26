@@ -15,9 +15,9 @@ const footerLinks = {
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border bg-surface">
-      <div className="container-main py-12">
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+    <footer className="border-t border-border bg-white">
+      <div className="container-main py-14">
+        <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
           <div className="col-span-2 sm:col-span-1">
             <Link
               href="/"
@@ -33,8 +33,8 @@ export default function Footer() {
 
           {Object.entries(footerLinks).map(([title, links]) => (
             <div key={title}>
-              <h3 className="text-sm font-medium text-text-primary">{title}</h3>
-              <ul className="mt-3 space-y-2">
+              <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
+              <ul className="mt-3 space-y-2.5">
                 {links.map((link) => (
                   <li key={link.label}>
                     <Link
@@ -50,11 +50,10 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-border pt-8 sm:flex-row sm:items-center">
+        <div className="mt-12 border-t border-border pt-8">
           <p className="text-xs text-text-muted">
             &copy; {new Date().getFullYear()} AIZinc. All rights reserved.
           </p>
-          <p className="text-xs text-text-muted">Design preview — sample data only.</p>
         </div>
       </div>
     </footer>

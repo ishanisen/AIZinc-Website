@@ -1,48 +1,50 @@
-import { CATEGORIES, Category } from "@/lib/types";
+import { CategoryRecord } from "@/lib/types";
 
 type CategoryChipsProps = {
-  activeCategory: Category | null;
-  onCategoryChange: (category: Category | null) => void;
+  categories: CategoryRecord[];
+  activeCategoryId: string | null;
+  onCategoryChange: (categoryId: string | null) => void;
 };
 
+const inactiveChip =
+  "border-border bg-white text-text-secondary hover:border-accent/40 hover:text-text-primary";
+const activeChip = "border-accent bg-accent-soft text-accent";
+
 export default function CategoryChips({
-  activeCategory,
+  categories,
+  activeCategoryId,
   onCategoryChange,
 }: CategoryChipsProps) {
   return (
     <div
-      className="flex flex-wrap items-center justify-center gap-2"
+      className="flex flex-wrap items-center justify-center gap-2.5"
       role="group"
       aria-label="Filter by category"
     >
       <button
         type="button"
-        aria-pressed={activeCategory === null}
+        aria-pressed={activeCategoryId === null}
         onClick={() => onCategoryChange(null)}
-        className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-          activeCategory === null
-            ? "border-accent bg-accent/10 text-accent"
-            : "border-border bg-surface text-text-secondary hover:border-text-muted hover:text-text-primary"
+        className={`rounded-full border px-4 py-2 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+          activeCategoryId === null ? activeChip : inactiveChip
         }`}
       >
         All
       </button>
 
-      {CATEGORIES.map((category) => {
-        const isActive = activeCategory === category;
+      {categories.map((category) => {
+        const isActive = activeCategoryId === category.id;
         return (
           <button
-            key={category}
+            key={category.id}
             type="button"
             aria-pressed={isActive}
-            onClick={() => onCategoryChange(isActive ? null : category)}
-            className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-              isActive
-                ? "border-accent bg-accent/10 text-accent"
-                : "border-border bg-surface text-text-secondary hover:border-text-muted hover:text-text-primary"
+            onClick={() => onCategoryChange(isActive ? null : category.id)}
+            className={`rounded-full border px-4 py-2 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+              isActive ? activeChip : inactiveChip
             }`}
           >
-            {category}
+            {category.displayLabel}
           </button>
         );
       })}

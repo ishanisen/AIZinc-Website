@@ -1,11 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "export",
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "mediumaquamarine-porpoise-781369.hostingersite.com",
+        hostname: "aizinc.tech",
         pathname: "/wp-content/uploads/**",
       },
     ],

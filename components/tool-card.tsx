@@ -82,7 +82,7 @@ export default function ToolCard({ tool, featured = false }: ToolCardProps) {
         </div>
       </div>
 
-      <p className="mt-3.5 min-h-[2.875rem] overflow-hidden text-sm leading-relaxed text-text-secondary [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] [overflow-wrap:anywhere]">
+      <p className="tagline-clamp mt-3.5 text-sm leading-relaxed text-text-secondary">
         {tool.description}
       </p>
 

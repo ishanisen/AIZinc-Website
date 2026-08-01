@@ -6,10 +6,10 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const navLinks = [
-  { label: "Categories", href: "#browse" },
-  { label: "Trending", href: "#featured" },
-  { label: "New", href: "#browse" },
-  { label: "Submit", href: "#submit" },
+  { label: "Categories", href: "/#browse" },
+  { label: "Trending", href: "/#featured" },
+  { label: "New", href: "/#browse" },
+  { label: "Submit", href: "/submit" },
 ];
 
 export default function Navbar() {
@@ -59,9 +59,8 @@ export default function Navbar() {
 
         <div className="flex items-center gap-3">
           <Link
-            href="#submit"
-            id="submit"
-            className="hidden rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:inline-flex"
+            href="/submit"
+            className="hidden rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:inline-flex"
           >
             Submit Tool
           </Link>
@@ -98,8 +97,8 @@ export default function Navbar() {
             ))}
             <li className="pt-2">
               <Link
-                href="#submit"
-                className="block rounded-lg bg-accent px-3 py-2.5 text-center text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                href="/submit"
+                className="block rounded-full bg-accent px-3 py-2.5 text-center text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 onClick={() => setMobileOpen(false)}
               >
                 Submit Tool

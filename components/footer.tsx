@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const footerLinks = {
   Discover: [
-    { label: "Categories", href: "/#browse" },
+    { label: "Categories", href: "/ai-tools" },
     { label: "Trending", href: "/#featured" },
     { label: "New tools", href: "/#browse" },
   ],

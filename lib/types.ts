@@ -11,6 +11,19 @@ export type CategoryRecord = {
   id: string;
   name: string;
   displayLabel: string;
+  slug: string;
+};
+
+export type CategoryTopTool = {
+  id: string;
+  name: string;
+  slug: string;
+  websiteUrl?: string;
+};
+
+export type CategoryOverview = CategoryRecord & {
+  toolCount: number;
+  topTools: CategoryTopTool[];
 };
 
 export type Tool = {
@@ -26,3 +39,5 @@ export type Tool = {
   logoUrl?: string;
   websiteUrl?: string;
 };
+
+export const CATEGORY_PAGE_SIZE = 12;

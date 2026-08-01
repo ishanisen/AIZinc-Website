@@ -6,7 +6,7 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const navLinks = [
-  { label: "Categories", href: "/#browse" },
+  { label: "Categories", href: "/ai-tools" },
   { label: "Trending", href: "/#featured" },
   { label: "New", href: "/#browse" },
   { label: "Submit", href: "/submit" },

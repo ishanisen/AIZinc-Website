@@ -1,10 +1,18 @@
 import { createSupabaseClient, getSupabaseEnvError } from "./supabase";
-import { PRICING_OPTIONS, PricingOption, Tool } from "./types";
+import { fetchCategoryBySlug } from "./categories";
+import {
+  CATEGORY_PAGE_SIZE,
+  CategoryRecord,
+  PRICING_OPTIONS,
+  PricingOption,
+  Tool,
+} from "./types";
 
 type SupabaseCategoryRow = {
   id: string | number;
   name: string;
   display_label: string | null;
+  slug?: string | null;
 };
 
 type SupabaseToolRow = {
@@ -15,8 +23,18 @@ type SupabaseToolRow = {
   website_url: string | null;
   logo_url: string | null;
   pricing_model: string | null;
+  featured: boolean | null;
   primary_category_id: string | number | null;
   categories: SupabaseCategoryRow | SupabaseCategoryRow[] | null;
+};
+
+export type CategoryToolsPage = {
+  category: CategoryRecord;
+  tools: Tool[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 };
 
 const DEFAULT_CATEGORY = "General";
@@ -75,11 +93,29 @@ function mapSupabaseToolToTool(row: SupabaseToolRow): Tool {
     description: normalizeDisplayText(row.tagline),
     pricing: normalizePricing(row.pricing_model),
     tags: [],
-    featured: false,
+    featured: Boolean(row.featured),
     logoUrl: row.logo_url?.trim() || undefined,
     websiteUrl: row.website_url?.trim() || undefined,
   };
 }
+
+const TOOL_SELECT = `
+  id,
+  name,
+  slug,
+  tagline,
+  website_url,
+  logo_url,
+  pricing_model,
+  featured,
+  primary_category_id,
+  categories (
+    id,
+    name,
+    display_label,
+    slug
+  )
+`;
 
 export async function fetchTools(): Promise<Tool[]> {
   const configError = getSupabaseEnvError();
@@ -91,23 +127,7 @@ export async function fetchTools(): Promise<Tool[]> {
 
   const { data, error } = await supabase
     .from("tools")
-    .select(
-      `
-      id,
-      name,
-      slug,
-      tagline,
-      website_url,
-      logo_url,
-      pricing_model,
-      primary_category_id,
-      categories (
-        id,
-        name,
-        display_label
-      )
-    `,
-    )
+    .select(TOOL_SELECT)
     .eq("published", true)
     .order("name");
 
@@ -115,7 +135,55 @@ export async function fetchTools(): Promise<Tool[]> {
     throw new Error(error.message);
   }
 
-  return (data ?? []).map(mapSupabaseToolToTool);
+  return (data ?? []).map((row) => mapSupabaseToolToTool(row as SupabaseToolRow));
+}
+
+export async function fetchToolsByCategorySlug(
+  slug: string,
+  page = 1,
+  pageSize: number = CATEGORY_PAGE_SIZE,
+): Promise<CategoryToolsPage | null> {
+  const configError = getSupabaseEnvError();
+  if (configError) {
+    throw new Error(configError);
+  }
+
+  const category = await fetchCategoryBySlug(slug);
+  if (!category) return null;
+
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+  const from = (safePage - 1) * safePageSize;
+  const to = from + safePageSize - 1;
+
+  const supabase = createSupabaseClient();
+
+  const { data, error, count } = await supabase
+    .from("tools")
+    .select(TOOL_SELECT, { count: "exact" })
+    .eq("published", true)
+    .eq("primary_category_id", category.id)
+    .order("featured", { ascending: false })
+    .order("name")
+    .range(from, to);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const total = count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / safePageSize));
+
+  return {
+    category,
+    tools: (data ?? []).map((row) =>
+      mapSupabaseToolToTool(row as SupabaseToolRow),
+    ),
+    total,
+    page: safePage,
+    pageSize: safePageSize,
+    totalPages,
+  };
 }
 
 export function getFeaturedTools(tools: Tool[]): Tool[] {

@@ -2,12 +2,12 @@ import Link from "next/link";
 
 const footerLinks = {
   Discover: [
-    { label: "Categories", href: "#browse" },
-    { label: "Trending", href: "#featured" },
-    { label: "New tools", href: "#browse" },
+    { label: "Categories", href: "/#browse" },
+    { label: "Trending", href: "/#featured" },
+    { label: "New tools", href: "/#browse" },
   ],
   AIZinc: [
-    { label: "Submit a tool", href: "#submit" },
+    { label: "Submit a tool", href: "/submit" },
     { label: "About", href: "#" },
     { label: "Contact", href: "#" },
   ],

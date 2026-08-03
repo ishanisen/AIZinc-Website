@@ -1,4 +1,4 @@
-import { createSupabaseClient, getSupabaseEnvError } from "./supabase";
+import { createServerSupabaseClient, getSupabaseEnvError } from "./supabase";
 import { fetchCategoryBySlug } from "./categories";
 import {
   CATEGORY_PAGE_SIZE,
@@ -123,7 +123,7 @@ export async function fetchTools(): Promise<Tool[]> {
     throw new Error(configError);
   }
 
-  const supabase = createSupabaseClient();
+  const supabase = createServerSupabaseClient();
 
   const { data, error } = await supabase
     .from("tools")
@@ -156,7 +156,7 @@ export async function fetchToolsByCategorySlug(
   const from = (safePage - 1) * safePageSize;
   const to = from + safePageSize - 1;
 
-  const supabase = createSupabaseClient();
+  const supabase = createServerSupabaseClient();
 
   const { data, error, count } = await supabase
     .from("tools")
@@ -184,8 +184,4 @@ export async function fetchToolsByCategorySlug(
     pageSize: safePageSize,
     totalPages,
   };
-}
-
-export function getFeaturedTools(tools: Tool[]): Tool[] {
-  return tools.filter((tool) => tool.featured);
 }

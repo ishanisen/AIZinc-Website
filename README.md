@@ -1,6 +1,6 @@
 # AIZinc Website
 
-A curated AI tools directory built with Next.js, TypeScript, and Tailwind CSS. Homepage tool data comes from Supabase.
+A curated AI tools directory built with Next.js, TypeScript, and Tailwind CSS. Tool and category data comes from Supabase.
 
 ## Setup
 
@@ -14,7 +14,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Supabase (required)
 
-Homepage tools are loaded from the `public.tools` table via Supabase.
+Directory data is loaded server-side from the `public.tools` and `public.categories` tables via Supabase.
 
 **`.env.local`** is gitignored. Replace the placeholders with your real values from Supabase → **Project Settings → API**:
 
@@ -28,8 +28,6 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key_here
 | `NEXT_PUBLIC_SUPABASE_URL` | Base project URL, e.g. `https://abcdefgh.supabase.co` — **not** the `/rest/v1` URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | The **publishable (anon) key** — never use the service role / secret key in the frontend |
 
-Until you replace the placeholders, the homepage shows a friendly error with **Try again**.
-
 ## Logo
 
 Place your logo at:
@@ -42,20 +40,16 @@ If the image is missing, the navbar falls back to a text “AIZinc” logo.
 
 ## Stack
 
-- Next.js App Router (static export)
+- Next.js App Router (Vercel-ready, server-side data fetching)
 - TypeScript
 - Tailwind CSS
 - Lucide React
-- Supabase (homepage tool data)
+- Supabase
 
-## Deploy to Hostinger (static)
+## Deploy to Vercel
 
-```bash
-npm run build
-```
+1. Push the repo and import the project in Vercel.
+2. Set the environment variables above in **Project Settings → Environment Variables** (Production, Preview, and Development as needed).
+3. Deploy. Vercel runs `next build` and hosts the Node.js server — no static `out/` folder upload.
 
-Upload the **contents** of the generated `out/` folder to Hostinger `public_html`.
-
-Set the same `NEXT_PUBLIC_*` env vars at build time (or bake them into `.env.local` before running `npm run build`) so they are included in the static bundle.
-
-Tool content updates in Supabase appear on refresh — no frontend rebuild needed for data changes.
+Tool and category updates in Supabase appear on the next request — no frontend rebuild required for content changes.

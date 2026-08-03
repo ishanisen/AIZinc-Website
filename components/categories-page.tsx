@@ -1,87 +1,13 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
-import { Loader2, RefreshCw } from "lucide-react";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import CategoryCard from "@/components/category-card";
-import { fetchCategoryOverviews } from "@/lib/categories";
-import { getSupabaseEnvError } from "@/lib/supabase";
 import { CategoryOverview } from "@/lib/types";
 
-function CategoriesLoading() {
-  return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <Loader2
-        className="h-8 w-8 animate-spin text-accent"
-        aria-hidden="true"
-      />
-      <p className="mt-4 text-sm font-medium text-text-secondary">
-        Loading categories…
-      </p>
-    </div>
-  );
-}
-
-type CategoriesErrorProps = {
-  message: string;
-  onRetry: () => void;
+type CategoriesPageProps = {
+  categories: CategoryOverview[];
 };
 
-function CategoriesError({ message, onRetry }: CategoriesErrorProps) {
-  return (
-    <div className="rounded-2xl border border-border bg-white px-6 py-16 text-center shadow-card">
-      <p className="text-base font-semibold text-text-primary">
-        Could not load categories
-      </p>
-      <p className="mt-2 text-sm text-text-secondary">{message}</p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="mt-6 inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground shadow-sm transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-      >
-        <RefreshCw className="h-4 w-4" aria-hidden="true" />
-        Try again
-      </button>
-    </div>
-  );
-}
-
-export default function CategoriesPage() {
-  const [categories, setCategories] = useState<CategoryOverview[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    const configError = getSupabaseEnvError();
-    if (configError) {
-      setError(configError);
-      setCategories([]);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const data = await fetchCategoryOverviews();
-      setCategories(data);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "An unexpected error occurred.";
-      console.error("[CategoriesPage] failed to load data:", err);
-      setError(message);
-      setCategories([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
+export default function CategoriesPage({ categories }: CategoriesPageProps) {
   return (
     <>
       <Navbar />
@@ -107,11 +33,7 @@ export default function CategoriesPage() {
 
         <section className="bg-background py-12 sm:py-16">
           <div className="container-main">
-            {loading ? (
-              <CategoriesLoading />
-            ) : error ? (
-              <CategoriesError message={error} onRetry={loadData} />
-            ) : categories.length === 0 ? (
+            {categories.length === 0 ? (
               <div className="rounded-2xl border border-border bg-white px-6 py-16 text-center shadow-card">
                 <p className="text-base font-semibold text-text-primary">
                   No categories with tools yet

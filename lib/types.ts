@@ -19,6 +19,7 @@ export type CategoryTopTool = {
   name: string;
   slug: string;
   websiteUrl?: string;
+  logoUrl?: string;
 };
 
 export type CategoryOverview = CategoryRecord & {

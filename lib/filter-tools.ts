@@ -79,3 +79,7 @@ export function getResultsHeading(
 
   return "Results";
 }
+
+export function getFeaturedTools(tools: Tool[]): Tool[] {
+  return tools.filter((tool) => tool.featured);
+}

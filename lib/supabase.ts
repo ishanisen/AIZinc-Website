@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 function isPlaceholderValue(value: string): boolean {
   return (
@@ -18,11 +18,11 @@ export function getSupabaseEnvError(): string | null {
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
 
   if (!url || !key) {
-    return "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to .env.local.";
+    return "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to your environment.";
   }
 
   if (isPlaceholderValue(url) || isPlaceholderValue(key)) {
-    return "Supabase is not configured yet. Replace the placeholder values in .env.local with your real project URL and publishable key.";
+    return "Supabase is not configured yet. Replace the placeholder values with your real project URL and publishable key.";
   }
 
   if (url.includes("/rest/v1")) {
@@ -32,14 +32,45 @@ export function getSupabaseEnvError(): string | null {
   return null;
 }
 
-export function createSupabaseClient(): SupabaseClient {
+function getSupabaseCredentials(): { url: string; key: string } {
   const configError = getSupabaseEnvError();
   if (configError) {
     throw new Error(configError);
   }
 
-  const url = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL!);
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+  return {
+    url: normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL!),
+    key: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+  };
+}
 
+/**
+ * Server Components, Route Handlers, and Server Actions.
+ * Uses no-store so directory data stays fresh on each request.
+ */
+export function createServerSupabaseClient(): SupabaseClient {
+  const { url, key } = getSupabaseCredentials();
+
+  return createClient(url, key, {
+    global: {
+      fetch: (input, init) =>
+        fetch(input, {
+          ...init,
+          cache: "no-store",
+        }),
+    },
+  });
+}
+
+/**
+ * Client Components only (browser). Prefer server fetching for page data.
+ */
+export function createBrowserSupabaseClient(): SupabaseClient {
+  const { url, key } = getSupabaseCredentials();
   return createClient(url, key);
+}
+
+/** @deprecated Use createServerSupabaseClient or createBrowserSupabaseClient */
+export function createSupabaseClient(): SupabaseClient {
+  return createServerSupabaseClient();
 }

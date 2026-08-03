@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ChevronDown, ChevronUp, Loader2, Plus, X } from "lucide-react";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
-import { fetchCategories } from "@/lib/categories";
 import { isValidEmail, isValidUrl, normalizeUrl } from "@/lib/form-validation";
 import {
   RELATIONSHIP_OPTIONS,
@@ -84,9 +83,11 @@ function ImagePreview({
   );
 }
 
-export default function SubmitToolPage() {
-  const [categories, setCategories] = useState<CategoryRecord[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
+export default function SubmitToolPage({
+  categories,
+}: {
+  categories: CategoryRecord[];
+}) {
   const [form, setForm] = useState(emptyForm);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -95,26 +96,6 @@ export default function SubmitToolPage() {
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadCategories() {
-      try {
-        const data = await fetchCategories();
-        if (!cancelled) setCategories(data);
-      } catch (error) {
-        console.error("[SubmitToolPage] failed to load categories:", error);
-      } finally {
-        if (!cancelled) setCategoriesLoading(false);
-      }
-    }
-
-    loadCategories();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const parsedTags = useMemo(() => {
     return form.tagsInput
@@ -417,12 +398,12 @@ export default function SubmitToolPage() {
                 required
                 value={form.categoryId}
                 onChange={(e) => updateField("categoryId", e.target.value)}
-                disabled={categoriesLoading}
+                disabled={categories.length === 0}
                 className="form-select mt-2"
               >
                 <option value="">
-                  {categoriesLoading
-                    ? "Loading categories…"
+                  {categories.length === 0
+                    ? "No categories available"
                     : "Select a category"}
                 </option>
                 {categories.map((category) => (

@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
 import CategoriesPage from "@/components/categories-page";
+import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
+import DataError from "@/components/data-error";
+import { fetchCategoryOverviews } from "@/lib/categories";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "All AI Tool Categories — AIZinc",
@@ -7,6 +13,31 @@ export const metadata: Metadata = {
     "Browse AI tool categories and find the most popular and featured tools for writing, coding, design, automation, and more.",
 };
 
-export default function Page() {
-  return <CategoriesPage />;
+export default async function Page() {
+  try {
+    const categories = await fetchCategoryOverviews();
+    return <CategoriesPage categories={categories} />;
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "An unexpected error occurred.";
+    console.error("[CategoriesPage] failed to load data:", error);
+
+    return (
+      <>
+        <Navbar />
+        <main>
+          <section className="bg-background py-12 sm:py-16">
+            <div className="container-main">
+              <DataError
+                title="Could not load categories"
+                message={message}
+                retryHref="/ai-tools"
+              />
+            </div>
+          </section>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 }

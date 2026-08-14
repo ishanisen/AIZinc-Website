@@ -33,49 +33,71 @@ export default function Hero({
   }
 
   return (
-    <section className="border-b border-border bg-background py-16 sm:py-20 lg:py-24">
-      <div className="container-main mx-auto max-w-3xl text-center">
-        <span className="inline-flex items-center rounded-full border border-border bg-white px-3.5 py-1 text-xs font-medium text-text-secondary">
+    <section className="relative overflow-hidden border-b border-border bg-background">
+      {/* Soft depth: teal/olive blobs + faint dot grid */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className="absolute -left-24 -top-28 h-72 w-72 rounded-full bg-accent/15 blur-3xl sm:h-96 sm:w-96" />
+        <div className="absolute -right-20 top-10 h-64 w-64 rounded-full bg-[#8B7355]/12 blur-3xl sm:h-80 sm:w-80" />
+        <div className="absolute bottom-0 left-1/2 h-48 w-[28rem] -translate-x-1/2 rounded-full bg-accent/10 blur-3xl" />
+        <div
+          className="absolute inset-0 opacity-[0.35]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at center, rgb(44 36 25 / 0.09) 1px, transparent 1px)",
+            backgroundSize: "22px 22px",
+            maskImage:
+              "linear-gradient(to bottom, black 0%, black 55%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, black 0%, black 55%, transparent 100%)",
+          }}
+        />
+      </div>
+
+      <div className="container-main relative mx-auto max-w-3xl px-4 py-12 text-center sm:py-16 lg:py-20">
+        <span className="inline-flex items-center rounded-full border border-border/80 bg-white/80 px-3.5 py-1 text-xs font-medium text-text-secondary shadow-sm backdrop-blur-sm">
           Discover AI tools faster
         </span>
 
-        <h1 className="mt-6 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl lg:text-[2.75rem] lg:leading-tight">
+        <h1 className="mt-5 text-3xl font-bold tracking-tight text-text-primary sm:mt-6 sm:text-4xl lg:text-[2.75rem] lg:leading-tight">
           Find the right AI tool in seconds.
         </h1>
 
-        <p className="mt-5 text-base leading-relaxed text-text-secondary sm:text-lg">
+        <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-text-secondary sm:mt-5 sm:text-lg">
           Search, filter, and compare AI tools across writing, coding, design,
           video, productivity, and more.
         </p>
 
         <form
           onSubmit={handleSubmit}
-          className="relative mx-auto mt-10 max-w-xl"
+          className="relative mx-auto mt-8 max-w-xl sm:mt-9"
           role="search"
         >
           <label htmlFor="hero-search" className="sr-only">
             Search AI tools
           </label>
-          <input
-            id="hero-search"
-            type="search"
-            value={searchInput}
-            onChange={(event) => onSearchInputChange(event.target.value)}
-            placeholder="Search by tool, use case, or category"
-            enterKeyHint="search"
-            autoComplete="off"
-            className="w-full rounded-2xl border border-border bg-white py-4 pl-5 pr-16 text-sm text-text-primary shadow-search placeholder:text-text-muted transition-all focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent-soft"
-          />
-          <button
-            type="submit"
-            className="absolute right-2.5 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-accent text-accent-foreground transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-            aria-label="Search tools"
-          >
-            <Search className="h-4 w-4" aria-hidden="true" />
-          </button>
+          <div className="flex items-stretch overflow-hidden rounded-2xl border border-border bg-white shadow-search ring-1 ring-black/[0.03] transition-shadow focus-within:border-accent focus-within:shadow-card-hover focus-within:ring-4 focus-within:ring-accent-soft">
+            <input
+              id="hero-search"
+              type="search"
+              value={searchInput}
+              onChange={(event) => onSearchInputChange(event.target.value)}
+              placeholder="Search by tool, use case, or category"
+              enterKeyHint="search"
+              autoComplete="off"
+              className="min-w-0 flex-1 border-0 bg-transparent py-3.5 pl-5 pr-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-0 sm:py-4"
+            />
+            <button
+              type="submit"
+              className="m-1.5 inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-accent px-3.5 text-sm font-medium text-accent-foreground transition-all hover:bg-accent-hover hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:px-5"
+              aria-label="Search tools"
+            >
+              <Search className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Search</span>
+            </button>
+          </div>
         </form>
 
-        <div className="mt-8">
+        <div className="mt-7 sm:mt-8">
           <CategoryChips
             categories={categories}
             activeCategoryId={activeCategoryId}
@@ -83,13 +105,16 @@ export default function Hero({
           />
         </div>
 
-        <ul className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
+        <ul className="mt-10 flex flex-wrap items-center justify-center gap-2.5 sm:mt-12 sm:gap-3">
           {trustItems.map(({ icon: Icon, label }) => (
             <li
               key={label}
-              className="flex items-center gap-2 text-xs text-text-muted sm:text-sm"
+              className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-white/70 px-3.5 py-2 text-sm text-text-secondary shadow-sm backdrop-blur-sm"
             >
-              <Icon className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
+              <Icon
+                className="h-4 w-4 shrink-0 text-accent"
+                aria-hidden="true"
+              />
               {label}
             </li>
           ))}

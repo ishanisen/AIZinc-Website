@@ -1,4 +1,4 @@
-import { createSupabaseClient, getSupabaseEnvError } from "./supabase";
+import { createServerSupabaseClient, getSupabaseEnvError } from "./supabase";
 import {
   CategoryOverview,
   CategoryRecord,
@@ -17,6 +17,7 @@ type SupabaseToolAggregateRow = {
   name: string;
   slug: string;
   website_url: string | null;
+  logo_url: string | null;
   featured: boolean | null;
   primary_category_id: string | number | null;
 };
@@ -37,7 +38,7 @@ export async function fetchCategories(): Promise<CategoryRecord[]> {
     throw new Error(configError);
   }
 
-  const supabase = createSupabaseClient();
+  const supabase = createServerSupabaseClient();
 
   const { data, error } = await supabase
     .from("categories")
@@ -59,7 +60,7 @@ export async function fetchCategoryBySlug(
     throw new Error(configError);
   }
 
-  const supabase = createSupabaseClient();
+  const supabase = createServerSupabaseClient();
 
   const { data, error } = await supabase
     .from("categories")
@@ -86,7 +87,7 @@ export async function fetchCategoryOverviews(): Promise<CategoryOverview[]> {
     throw new Error(configError);
   }
 
-  const supabase = createSupabaseClient();
+  const supabase = createServerSupabaseClient();
 
   const [categoriesResult, toolsResult] = await Promise.all([
     supabase
@@ -95,7 +96,9 @@ export async function fetchCategoryOverviews(): Promise<CategoryOverview[]> {
       .order("name"),
     supabase
       .from("tools")
-      .select("id, name, slug, website_url, featured, primary_category_id")
+      .select(
+        "id, name, slug, website_url, logo_url, featured, primary_category_id",
+      )
       .eq("published", true)
       .order("name"),
   ]);
@@ -126,7 +129,8 @@ export async function fetchCategoryOverviews(): Promise<CategoryOverview[]> {
     if (tools.length === 0) continue;
 
     const sorted = [...tools].sort((a, b) => {
-      const featuredDiff = Number(Boolean(b.featured)) - Number(Boolean(a.featured));
+      const featuredDiff =
+        Number(Boolean(b.featured)) - Number(Boolean(a.featured));
       if (featuredDiff !== 0) return featuredDiff;
       return a.name.localeCompare(b.name);
     });
@@ -136,6 +140,7 @@ export async function fetchCategoryOverviews(): Promise<CategoryOverview[]> {
       name: tool.name.trim(),
       slug: tool.slug,
       websiteUrl: tool.website_url?.trim() || undefined,
+      logoUrl: tool.logo_url?.trim() || undefined,
     }));
 
     overviews.push({

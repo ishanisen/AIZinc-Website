@@ -3,7 +3,9 @@ import SubmitToolPage from "@/components/submit-tool-page";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import DataError from "@/components/data-error";
+import SupabaseConfigMissing from "@/components/supabase-config-missing";
 import { fetchCategories } from "@/lib/categories";
+import { getSupabaseEnvError, isSupabaseConfigError } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +16,18 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
+  if (getSupabaseEnvError()) {
+    return <SupabaseConfigMissing retryHref="/submit" />;
+  }
+
   try {
     const categories = await fetchCategories();
     return <SubmitToolPage categories={categories} />;
   } catch (error) {
+    if (isSupabaseConfigError(error)) {
+      return <SupabaseConfigMissing retryHref="/submit" />;
+    }
+
     const message =
       error instanceof Error ? error.message : "An unexpected error occurred.";
     console.error("[SubmitToolPage] failed to load categories:", error);

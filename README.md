@@ -6,7 +6,7 @@ A curated AI tools directory built with Next.js, TypeScript, and Tailwind CSS. T
 
 ```bash
 npm install
-cp .env.example .env.local   # if .env.local does not exist yet
+cp .env.local.example .env.local   # if .env.local does not exist yet
 npm run dev
 ```
 
@@ -16,10 +16,10 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Directory data is loaded server-side from the `public.tools` and `public.categories` tables via Supabase.
 
-**`.env.local`** is gitignored. Replace the placeholders with your real values from Supabase → **Project Settings → API**:
+**`.env.local`** is gitignored. Copy `.env.local.example` and replace the placeholders with your real values from Supabase → **Project Settings → API**:
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key_here
 ```
 

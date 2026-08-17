@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
+import BlueprintFrame from "@/components/blueprint-frame";
 
 type DataErrorProps = {
   title?: string;
@@ -13,16 +14,15 @@ export default function DataError({
   retryHref = "/",
 }: DataErrorProps) {
   return (
-    <div className="rounded-2xl border border-border bg-white px-6 py-16 text-center shadow-card">
-      <p className="text-base font-semibold text-text-primary">{title}</p>
+    <BlueprintFrame className="px-6 py-16 text-center">
+      <p className="font-heading text-base font-semibold uppercase tracking-[0.02em] text-text-primary">
+        {title}
+      </p>
       <p className="mt-2 text-sm text-text-secondary">{message}</p>
-      <Link
-        href={retryHref}
-        className="mt-6 inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground shadow-sm transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-      >
-        <RefreshCw className="h-4 w-4" aria-hidden="true" />
+      <Link href={retryHref} className="btn-primary mt-6 inline-flex gap-2">
+        <RefreshCw className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
         Try again
       </Link>
-    </div>
+    </BlueprintFrame>
   );
 }

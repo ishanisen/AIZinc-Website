@@ -3,6 +3,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 function isPlaceholderValue(value: string): boolean {
   return (
     value.includes("YOUR_PROJECT_REF") ||
+    value.includes("your-project-ref") ||
     value.includes("your_key_here") ||
     value.includes("your-project-url") ||
     value.includes("your-publishable-key")
@@ -18,7 +19,7 @@ export function getSupabaseEnvError(): string | null {
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
 
   if (!url || !key) {
-    return "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to your environment.";
+    return "Supabase is not configured — check environment variables. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.";
   }
 
   if (isPlaceholderValue(url) || isPlaceholderValue(key)) {
@@ -30,6 +31,15 @@ export function getSupabaseEnvError(): string | null {
   }
 
   return null;
+}
+
+export function isSupabaseConfigError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return (
+    error.message.includes("Supabase is not configured") ||
+    error.message.includes("NEXT_PUBLIC_SUPABASE_URL") ||
+    error.message.includes("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY")
+  );
 }
 
 function getSupabaseCredentials(): { url: string; key: string } {

@@ -9,13 +9,16 @@ type ToolLogoProps = {
 };
 
 const frameClass =
-  "flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-surface-2";
+  "grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-[10px] border border-border";
 
 function LetterAvatar({ name }: { name: string }) {
   const letter = name.trim().charAt(0).toUpperCase() || "?";
 
   return (
-    <div className={`${frameClass} text-sm font-semibold text-accent`} aria-hidden="true">
+    <div
+      className={`${frameClass} font-heading text-sm font-semibold text-accent`}
+      aria-hidden="true"
+    >
       {letter}
     </div>
   );
@@ -36,16 +39,15 @@ export default function ToolLogo({ name, logoUrl, className }: ToolLogoProps) {
 
   return (
     <div className={`${frameClass} ${className ?? ""}`}>
-      {/* Native img: Google Favicon URLs are often ICO/PNG via redirect and can fail Next Image optimization. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt=""
-        width={44}
-        height={44}
+        width={22}
+        height={22}
         loading="lazy"
         decoding="async"
-        className="h-full w-full object-contain p-1"
+        className="h-[22px] w-[22px] object-contain"
         onError={() => setFailed(true)}
       />
     </div>

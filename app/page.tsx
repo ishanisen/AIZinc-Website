@@ -3,8 +3,10 @@ import HomePage from "@/components/home-page";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import DataError from "@/components/data-error";
+import SupabaseConfigMissing from "@/components/supabase-config-missing";
 import { fetchCategories } from "@/lib/categories";
 import { fetchTools } from "@/lib/tools";
+import { getSupabaseEnvError, isSupabaseConfigError } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,10 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
+  if (getSupabaseEnvError()) {
+    return <SupabaseConfigMissing retryHref="/" />;
+  }
+
   try {
     const [tools, categories] = await Promise.all([
       fetchTools(),
@@ -23,6 +29,10 @@ export default async function Page() {
 
     return <HomePage tools={tools} categories={categories} />;
   } catch (error) {
+    if (isSupabaseConfigError(error)) {
+      return <SupabaseConfigMissing retryHref="/" />;
+    }
+
     const message =
       error instanceof Error ? error.message : "An unexpected error occurred.";
     console.error("[HomePage] failed to load data:", error);

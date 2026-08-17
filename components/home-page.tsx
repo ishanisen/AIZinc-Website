@@ -3,16 +3,13 @@
 import { useMemo, useState } from "react";
 import Navbar from "@/components/navbar";
 import Hero from "@/components/hero";
+import CategoryTicker from "@/components/category-ticker";
+import DirectoryRegister from "@/components/directory-register";
 import FeaturedTools from "@/components/featured-tools";
-import FilteredResults from "@/components/filtered-results";
-import ToolGrid from "@/components/tool-grid";
+import BrowseTools from "@/components/browse-tools";
+import SubmitCta from "@/components/submit-cta";
 import Footer from "@/components/footer";
-import {
-  filterTools,
-  getFeaturedTools,
-  getResultsHeading,
-  hasActiveFilters,
-} from "@/lib/filter-tools";
+import { filterTools, getFeaturedTools } from "@/lib/filter-tools";
 import { CategoryRecord, PricingOption, Tool } from "@/lib/types";
 
 type HomePageProps = {
@@ -21,39 +18,19 @@ type HomePageProps = {
 };
 
 export default function HomePage({ tools, categories }: HomePageProps) {
-  const [searchInput, setSearchInput] = useState("");
-  const [submittedQuery, setSubmittedQuery] = useState("");
+  const [query, setQuery] = useState("");
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [activePricing, setActivePricing] = useState<PricingOption | null>(null);
-
-  const isFiltered = hasActiveFilters(
-    submittedQuery,
-    activeCategoryId,
-    activePricing,
-  );
 
   const featuredTools = useMemo(() => getFeaturedTools(tools), [tools]);
 
   const filteredTools = useMemo(
-    () =>
-      filterTools(tools, submittedQuery, activeCategoryId, activePricing),
-    [tools, submittedQuery, activeCategoryId, activePricing],
+    () => filterTools(tools, query, activeCategoryId, activePricing),
+    [tools, query, activeCategoryId, activePricing],
   );
-
-  const resultsHeading = getResultsHeading(
-    submittedQuery,
-    activeCategoryId,
-    activePricing,
-    categories,
-  );
-
-  function handleSearchSubmit() {
-    setSubmittedQuery(searchInput.trim());
-  }
 
   function clearFilters() {
-    setSearchInput("");
-    setSubmittedQuery("");
+    setQuery("");
     setActiveCategoryId(null);
     setActivePricing(null);
   }
@@ -63,33 +40,26 @@ export default function HomePage({ tools, categories }: HomePageProps) {
       <Navbar />
       <main>
         <Hero
-          searchInput={searchInput}
-          onSearchInputChange={setSearchInput}
-          onSearchSubmit={handleSearchSubmit}
+          query={query}
+          onQueryChange={setQuery}
           categories={categories}
-          activeCategoryId={activeCategoryId}
           onCategoryChange={setActiveCategoryId}
         />
-
-        {isFiltered ? (
-          <FilteredResults
-            tools={filteredTools}
-            heading={resultsHeading}
-            onClear={clearFilters}
-          />
-        ) : (
-          <>
-            <FeaturedTools tools={featuredTools} />
-            <ToolGrid
-              tools={tools}
-              categories={categories}
-              activeCategoryId={activeCategoryId}
-              onCategoryChange={setActiveCategoryId}
-              activePricing={activePricing}
-              onPricingChange={setActivePricing}
-            />
-          </>
-        )}
+        <CategoryTicker categories={categories} />
+        <DirectoryRegister categoryCount={categories.length} />
+        <FeaturedTools tools={featuredTools} />
+        <BrowseTools
+          tools={filteredTools}
+          categories={categories}
+          query={query}
+          onQueryChange={setQuery}
+          activeCategoryId={activeCategoryId}
+          onCategoryChange={setActiveCategoryId}
+          activePricing={activePricing}
+          onPricingChange={setActivePricing}
+          onClear={clearFilters}
+        />
+        <SubmitCta />
       </main>
       <Footer />
     </>

@@ -3,7 +3,9 @@ import CategoriesPage from "@/components/categories-page";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import DataError from "@/components/data-error";
+import SupabaseConfigMissing from "@/components/supabase-config-missing";
 import { fetchCategoryOverviews } from "@/lib/categories";
+import { getSupabaseEnvError, isSupabaseConfigError } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +16,18 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
+  if (getSupabaseEnvError()) {
+    return <SupabaseConfigMissing retryHref="/ai-tools" />;
+  }
+
   try {
     const categories = await fetchCategoryOverviews();
     return <CategoriesPage categories={categories} />;
   } catch (error) {
+    if (isSupabaseConfigError(error)) {
+      return <SupabaseConfigMissing retryHref="/ai-tools" />;
+    }
+
     const message =
       error instanceof Error ? error.message : "An unexpected error occurred.";
     console.error("[CategoriesPage] failed to load data:", error);

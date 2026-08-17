@@ -1,125 +1,136 @@
 "use client";
 
-import { Search, Sparkles, ShieldCheck, RefreshCw } from "lucide-react";
-import CategoryChips from "./category-chips";
+import { categoryPalette, HERO_CATEGORY_SLUGS } from "@/lib/category-colors";
+import { scrollToId } from "@/lib/scroll-to";
 import { CategoryRecord } from "@/lib/types";
 
 type HeroProps = {
-  searchInput: string;
-  onSearchInputChange: (value: string) => void;
-  onSearchSubmit: () => void;
+  query: string;
+  onQueryChange: (value: string) => void;
   categories: CategoryRecord[];
-  activeCategoryId: string | null;
   onCategoryChange: (categoryId: string | null) => void;
 };
 
-const trustItems = [
-  { icon: RefreshCw, label: "Updated weekly" },
-  { icon: ShieldCheck, label: "Curated results" },
-  { icon: Sparkles, label: "Free + paid tools" },
-];
+function orderedHeroCategories(categories: CategoryRecord[]): CategoryRecord[] {
+  const bySlug = new Map(categories.map((c) => [c.slug, c]));
+  const ordered: CategoryRecord[] = [];
+
+  for (const slug of HERO_CATEGORY_SLUGS) {
+    const match = bySlug.get(slug);
+    if (match) ordered.push(match);
+  }
+
+  for (const category of categories) {
+    if (!ordered.some((item) => item.id === category.id)) {
+      ordered.push(category);
+    }
+  }
+
+  return ordered;
+}
 
 export default function Hero({
-  searchInput,
-  onSearchInputChange,
-  onSearchSubmit,
+  query,
+  onQueryChange,
   categories,
-  activeCategoryId,
   onCategoryChange,
 }: HeroProps) {
+  const ordered = orderedHeroCategories(categories);
+  const visible = ordered.slice(0, 9);
+  const extraCount = Math.max(0, ordered.length - visible.length);
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onSearchSubmit();
+    scrollToId("browse");
   }
 
   return (
-    <section className="relative overflow-hidden border-b border-border bg-background">
-      {/* Soft depth: teal/olive blobs + faint dot grid */}
-      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="absolute -left-24 -top-28 h-72 w-72 rounded-full bg-accent/15 blur-3xl sm:h-96 sm:w-96" />
-        <div className="absolute -right-20 top-10 h-64 w-64 rounded-full bg-[#8B7355]/12 blur-3xl sm:h-80 sm:w-80" />
-        <div className="absolute bottom-0 left-1/2 h-48 w-[28rem] -translate-x-1/2 rounded-full bg-accent/10 blur-3xl" />
-        <div
-          className="absolute inset-0 opacity-[0.35]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at center, rgb(44 36 25 / 0.09) 1px, transparent 1px)",
-            backgroundSize: "22px 22px",
-            maskImage:
-              "linear-gradient(to bottom, black 0%, black 55%, transparent 100%)",
-            WebkitMaskImage:
-              "linear-gradient(to bottom, black 0%, black 55%, transparent 100%)",
-          }}
-        />
-      </div>
-
-      <div className="container-main relative mx-auto max-w-3xl px-4 py-12 text-center sm:py-16 lg:py-20">
-        <span className="inline-flex items-center rounded-full border border-border/80 bg-white/80 px-3.5 py-1 text-xs font-medium text-text-secondary shadow-sm backdrop-blur-sm">
-          Discover AI tools faster
-        </span>
-
-        <h1 className="mt-5 text-3xl font-bold tracking-tight text-text-primary sm:mt-6 sm:text-4xl lg:text-[2.75rem] lg:leading-tight">
-          Find the right AI tool in seconds.
+    <header className="relative overflow-hidden border-b border-border bg-[repeating-linear-gradient(to_right,color-mix(in_srgb,#1e3a6e_9%,transparent)_0_1px,transparent_1px_72px),repeating-linear-gradient(to_bottom,color-mix(in_srgb,#1e3a6e_9%,transparent)_0_1px,transparent_1px_72px)]">
+      <div className="hero-scanline" aria-hidden="true" />
+      <div className="container-main pb-[clamp(48px,6vw,88px)] pt-[clamp(64px,9vw,120px)]">
+        <h1 className="-ml-[0.05em] font-heading text-[clamp(38px,5.6vw,78px)] font-semibold uppercase leading-[1.06] tracking-[-0.01em]">
+          <span className="animate-rise block">Find the right</span>
+          <span className="animate-rise-d1 block">
+            AI tool in seconds.
+            <span
+              aria-hidden="true"
+              className="animate-blink ml-[0.16em] inline-block h-[0.13em] w-[0.13em] bg-accent"
+            />
+          </span>
         </h1>
 
-        <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-text-secondary sm:mt-5 sm:text-lg">
+        <p className="animate-rise-d2 mt-7 max-w-[58ch] text-base leading-[1.5] text-[color-mix(in_srgb,#1d1f20_78%,transparent)]">
           Search, filter, and compare AI tools across writing, coding, design,
           video, productivity, and more.
         </p>
 
         <form
           onSubmit={handleSubmit}
-          className="relative mx-auto mt-8 max-w-xl sm:mt-9"
+          className="animate-rise-d3 mt-8 flex flex-wrap gap-2.5"
           role="search"
         >
           <label htmlFor="hero-search" className="sr-only">
             Search AI tools
           </label>
-          <div className="flex items-stretch overflow-hidden rounded-2xl border border-border bg-white shadow-search ring-1 ring-black/[0.03] transition-shadow focus-within:border-accent focus-within:shadow-card-hover focus-within:ring-4 focus-within:ring-accent-soft">
-            <input
-              id="hero-search"
-              type="search"
-              value={searchInput}
-              onChange={(event) => onSearchInputChange(event.target.value)}
-              placeholder="Search by tool, use case, or category"
-              enterKeyHint="search"
-              autoComplete="off"
-              className="min-w-0 flex-1 border-0 bg-transparent py-3.5 pl-5 pr-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-0 sm:py-4"
-            />
-            <button
-              type="submit"
-              className="m-1.5 inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-accent px-3.5 text-sm font-medium text-accent-foreground transition-all hover:bg-accent-hover hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:px-5"
-              aria-label="Search tools"
-            >
-              <Search className="h-4 w-4" aria-hidden="true" />
-              <span className="hidden sm:inline">Search</span>
-            </button>
-          </div>
+          <input
+            id="hero-search"
+            type="search"
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+            placeholder="Search AI tools"
+            autoComplete="off"
+            className="ds-input max-w-[440px] flex-1"
+          />
+          <button type="submit" className="btn-primary">
+            Search
+          </button>
         </form>
 
-        <div className="mt-7 sm:mt-8">
-          <CategoryChips
-            categories={categories}
-            activeCategoryId={activeCategoryId}
-            onCategoryChange={onCategoryChange}
-          />
+        <div className="animate-rise-d4 mt-5 flex flex-wrap gap-2">
+          {visible.map((category) => {
+            const palette = categoryPalette(category.slug);
+            return (
+              <button
+                key={category.id}
+                type="button"
+                onClick={() => {
+                  onCategoryChange(category.id);
+                  scrollToId("browse");
+                }}
+                className="inline-flex cursor-pointer items-center gap-[7px] rounded-lg border border-accent bg-background px-3.5 py-1.5 text-xs text-accent transition-colors hover:border-accent hover:text-accent-700"
+              >
+                <span
+                  aria-hidden="true"
+                  className="inline-block h-[7px] w-[7px] rounded-full"
+                  style={{ background: palette.dot }}
+                />
+                {category.displayLabel}
+              </button>
+            );
+          })}
+          {extraCount > 0 && (
+            <button
+              type="button"
+              onClick={() => scrollToId("browse")}
+              className="inline-flex cursor-pointer items-center rounded-lg bg-accent-100 px-3.5 py-1.5 text-xs text-[#0d1f3d] transition-colors hover:bg-[color-mix(in_srgb,#1e3a6e_24%,transparent)]"
+            >
+              +{extraCount} more
+            </button>
+          )}
         </div>
 
-        <ul className="mt-10 flex flex-wrap items-center justify-center gap-2.5 sm:mt-12 sm:gap-3">
-          {trustItems.map(({ icon: Icon, label }) => (
-            <li
-              key={label}
-              className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-white/70 px-3.5 py-2 text-sm text-text-secondary shadow-sm backdrop-blur-sm"
-            >
-              <Icon
-                className="h-4 w-4 shrink-0 text-accent"
-                aria-hidden="true"
-              />
-              {label}
-            </li>
-          ))}
-        </ul>
+        <div className="animate-rise-d5 mt-10 flex flex-wrap gap-x-7 gap-y-2.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-[color-mix(in_srgb,#1d1f20_70%,transparent)]">
+          <span>Updated weekly</span>
+          <span aria-hidden="true" className="text-accent">
+            +
+          </span>
+          <span>Curated results</span>
+          <span aria-hidden="true" className="text-accent">
+            +
+          </span>
+          <span>Free + paid tools</span>
+        </div>
       </div>
-    </section>
+    </header>
   );
 }

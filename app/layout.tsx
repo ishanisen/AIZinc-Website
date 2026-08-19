@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Instrument_Sans, Space_Grotesk } from "next/font/google";
+import { CompareProvider } from "@/components/compare-provider";
+import CompareTray from "@/components/compare-tray";
 import "./globals.css";
 
 const instrumentSans = Instrument_Sans({
@@ -33,7 +35,10 @@ export default function RootLayout({
       className={`${instrumentSans.variable} ${spaceGrotesk.variable}`}
     >
       <body className="min-h-screen bg-background font-sans text-text-primary">
-        {children}
+        <CompareProvider>
+          {children}
+          <CompareTray />
+        </CompareProvider>
       </body>
     </html>
   );

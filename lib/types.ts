@@ -41,4 +41,28 @@ export type Tool = {
   websiteUrl?: string;
 };
 
+/** Nested tool_details fields — null means missing, never a guessed value. */
+export type ToolDetails = {
+  primaryCapability: string | null;
+  specificUseCases: string | null;
+  targetAudience: string | null;
+  deploymentType: string | null;
+  underlyingModelApi: string | null;
+  apiAvailability: string | null;
+  openSourceStatus: string | null;
+  dataStoragePolicy: string | null;
+  complianceCertifications: string | null;
+  commercialUseRights: string | null;
+  developerParent: string | null;
+  countryOfOrigin: string | null;
+  integrationEcosystem: string | null;
+  trialLimitations: string | null;
+};
+
+export type ToolDetail = Tool & {
+  hasFreePlan: boolean;
+  pricingLabel: string | null;
+  details: ToolDetails | null;
+};
+
 export const CATEGORY_PAGE_SIZE = 12;

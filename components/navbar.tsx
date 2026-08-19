@@ -6,10 +6,10 @@ import { useState } from "react";
 import BrandMark from "@/components/brand-mark";
 
 const navLinks = [
-  { label: "Categories", href: "/#browse" },
+  { label: "Categories", href: "/ai-tools" },
   { label: "Trending", href: "/#trending" },
   { label: "New", href: "/#browse" },
-  { label: "Submit", href: "/#submit" },
+  { label: "Submit", href: "/submit" },
 ];
 
 export default function Navbar() {

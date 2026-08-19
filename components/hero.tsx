@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { categoryPalette, HERO_CATEGORY_SLUGS } from "@/lib/category-colors";
 import { scrollToId } from "@/lib/scroll-to";
 import { CategoryRecord } from "@/lib/types";
@@ -109,13 +110,12 @@ export default function Hero({
             );
           })}
           {extraCount > 0 && (
-            <button
-              type="button"
-              onClick={() => scrollToId("browse")}
-              className="inline-flex cursor-pointer items-center rounded-lg bg-accent-100 px-3.5 py-1.5 text-xs text-[#0d1f3d] transition-colors hover:bg-[color-mix(in_srgb,#1e3a6e_24%,transparent)]"
+            <Link
+              href="/ai-tools"
+              className="inline-flex cursor-pointer items-center rounded-lg bg-accent-100 px-3.5 py-1.5 text-xs text-[#0d1f3d] no-underline transition-colors hover:bg-[color-mix(in_srgb,#1e3a6e_24%,transparent)]"
             >
               +{extraCount} more
-            </button>
+            </Link>
           )}
         </div>
 

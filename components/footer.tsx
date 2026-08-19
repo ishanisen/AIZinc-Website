@@ -3,7 +3,7 @@ import BrandMark from "@/components/brand-mark";
 
 const footerLinks = {
   Discover: [
-    { label: "Categories", href: "/#browse" },
+    { label: "Categories", href: "/ai-tools" },
     { label: "Trending", href: "/#trending" },
     { label: "New tools", href: "/#browse" },
   ],

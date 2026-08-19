@@ -6,6 +6,8 @@ import {
   PRICING_OPTIONS,
   PricingOption,
   Tool,
+  ToolDetail,
+  ToolDetails,
 } from "./types";
 
 type SupabaseCategoryRow = {
@@ -13,6 +15,23 @@ type SupabaseCategoryRow = {
   name: string;
   display_label: string | null;
   slug?: string | null;
+};
+
+type SupabaseToolDetailsRow = {
+  primary_capability: string | null;
+  specific_use_cases: string | null;
+  target_audience: string | null;
+  deployment_type: string | null;
+  underlying_model_api: string | null;
+  api_availability: string | null;
+  open_source_status: string | null;
+  data_storage_policy: string | null;
+  compliance_certifications: string | null;
+  commercial_use_rights: string | null;
+  developer_parent: string | null;
+  country_of_origin: string | null;
+  integration_ecosystem: string | null;
+  trial_limitations: string | null;
 };
 
 type SupabaseToolRow = {
@@ -24,8 +43,13 @@ type SupabaseToolRow = {
   logo_url: string | null;
   pricing_model: string | null;
   featured: boolean | null;
+  has_free_plan?: boolean | null;
   primary_category_id: string | number | null;
   categories: SupabaseCategoryRow | SupabaseCategoryRow[] | null;
+  tool_details?:
+    | SupabaseToolDetailsRow
+    | SupabaseToolDetailsRow[]
+    | null;
 };
 
 export type CategoryToolsPage = {
@@ -50,11 +74,52 @@ function normalizeDisplayText(value: string | null | undefined): string {
     .trim();
 }
 
+function extractNestedRow<T>(
+  nested: T | T[] | null | undefined,
+): T | null {
+  if (!nested) return null;
+  return Array.isArray(nested) ? (nested[0] ?? null) : nested;
+}
+
 function extractCategoryRow(
   categories: SupabaseCategoryRow | SupabaseCategoryRow[] | null | undefined,
 ): SupabaseCategoryRow | null {
-  if (!categories) return null;
-  return Array.isArray(categories) ? (categories[0] ?? null) : categories;
+  return extractNestedRow(categories);
+}
+
+function nullableDisplayText(value: string | null | undefined): string | null {
+  const normalized = normalizeDisplayText(value);
+  return normalized || null;
+}
+
+function mapToolDetails(
+  nested:
+    | SupabaseToolDetailsRow
+    | SupabaseToolDetailsRow[]
+    | null
+    | undefined,
+): ToolDetails | null {
+  const row = extractNestedRow(nested);
+  if (!row) return null;
+
+  return {
+    primaryCapability: nullableDisplayText(row.primary_capability),
+    specificUseCases: nullableDisplayText(row.specific_use_cases),
+    targetAudience: nullableDisplayText(row.target_audience),
+    deploymentType: nullableDisplayText(row.deployment_type),
+    underlyingModelApi: nullableDisplayText(row.underlying_model_api),
+    apiAvailability: nullableDisplayText(row.api_availability),
+    openSourceStatus: nullableDisplayText(row.open_source_status),
+    dataStoragePolicy: nullableDisplayText(row.data_storage_policy),
+    complianceCertifications: nullableDisplayText(
+      row.compliance_certifications,
+    ),
+    commercialUseRights: nullableDisplayText(row.commercial_use_rights),
+    developerParent: nullableDisplayText(row.developer_parent),
+    countryOfOrigin: nullableDisplayText(row.country_of_origin),
+    integrationEcosystem: nullableDisplayText(row.integration_ecosystem),
+    trialLimitations: nullableDisplayText(row.trial_limitations),
+  };
 }
 
 function extractCategoryDisplayLabel(
@@ -96,6 +161,15 @@ function mapSupabaseToolToTool(row: SupabaseToolRow): Tool {
     featured: Boolean(row.featured),
     logoUrl: row.logo_url?.trim() || undefined,
     websiteUrl: row.website_url?.trim() || undefined,
+  };
+}
+
+function mapSupabaseToolToToolDetail(row: SupabaseToolRow): ToolDetail {
+  return {
+    ...mapSupabaseToolToTool(row),
+    hasFreePlan: Boolean(row.has_free_plan),
+    pricingLabel: row.pricing_model?.trim() || null,
+    details: mapToolDetails(row.tool_details),
   };
 }
 
@@ -184,4 +258,101 @@ export async function fetchToolsByCategorySlug(
     pageSize: safePageSize,
     totalPages,
   };
+}
+
+const TOOL_DETAIL_SELECT = `
+  id,
+  name,
+  slug,
+  tagline,
+  website_url,
+  logo_url,
+  pricing_model,
+  has_free_plan,
+  featured,
+  published,
+  primary_category_id,
+  categories (
+    id,
+    name,
+    display_label,
+    slug
+  ),
+  tool_details (
+    primary_capability,
+    specific_use_cases,
+    target_audience,
+    deployment_type,
+    underlying_model_api,
+    api_availability,
+    open_source_status,
+    data_storage_policy,
+    compliance_certifications,
+    commercial_use_rights,
+    developer_parent,
+    country_of_origin,
+    integration_ecosystem,
+    trial_limitations
+  )
+`;
+
+export async function fetchToolBySlug(
+  slug: string,
+): Promise<ToolDetail | null> {
+  const configError = getSupabaseEnvError();
+  if (configError) {
+    throw new Error(configError);
+  }
+
+  const supabase = createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("tools")
+    .select(TOOL_DETAIL_SELECT)
+    .eq("slug", slug)
+    .eq("published", true)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) return null;
+
+  return mapSupabaseToolToToolDetail(data as SupabaseToolRow);
+}
+
+export async function fetchToolsBySlugs(
+  slugs: string[],
+): Promise<ToolDetail[]> {
+  const configError = getSupabaseEnvError();
+  if (configError) {
+    throw new Error(configError);
+  }
+
+  const unique = [...new Set(slugs.map((slug) => slug.trim()).filter(Boolean))];
+  if (unique.length === 0) return [];
+
+  const supabase = createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("tools")
+    .select(TOOL_DETAIL_SELECT)
+    .eq("published", true)
+    .in("slug", unique);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const bySlug = new Map(
+    (data ?? []).map((row) => {
+      const tool = mapSupabaseToolToToolDetail(row as SupabaseToolRow);
+      return [tool.slug, tool] as const;
+    }),
+  );
+
+  return unique
+    .map((slug) => bySlug.get(slug))
+    .filter((tool): tool is ToolDetail => Boolean(tool));
 }
